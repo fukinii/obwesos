@@ -14,6 +14,11 @@ T_linspace = np.linspace(1e-1, 10, 100)
 alpha = np.full(5, 0.1)
 out = np.zeros((len(T_linspace), 6), dtype=np.double)
 
+alpha_my = newton_method(1000, A, n, 2, I_1, I_2, I_3, 1e-8)
+
+print(alpha_my[1] + 2 * alpha_my[2] + 3 * alpha_my[3])
+print(alpha_my[4])
+
 for index, T in enumerate(T_linspace):
     alpha = newton_method(1000, A, n, T, I_1, I_2, I_3, 1e-8)
     out[index, 0] = T
@@ -24,11 +29,11 @@ for index, T in enumerate(T_linspace):
 fig = plt.figure()
 ax = fig.add_subplot(1, 1, 1)
 ax.set_title("n = 1e17")
-plt.plot(T_linspace, out[:, 0], label="alpha0")
-plt.plot(T_linspace, out[:, 1], label="alpha1")
-plt.plot(T_linspace, out[:, 2], label="alpha2")
-plt.plot(T_linspace, out[:, 3], label="alpha3")
-plt.plot(T_linspace, out[:, 4], label="alpha")
+plt.plot(T_linspace, out[:, 1], label="alpha0")
+plt.plot(T_linspace, out[:, 2], label="alpha1")
+plt.plot(T_linspace, out[:, 3], label="alpha2")
+plt.plot(T_linspace, out[:, 4], label="alpha3")
+plt.plot(T_linspace, out[:, 5], label="alpha")
 plt.xlabel("T, эВ")
 plt.grid()
 plt.legend()
