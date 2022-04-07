@@ -19,6 +19,7 @@ def solution(t):
 
     return res
 
+
 def f(t, x):
     res = np.zeros_like(x)
     res[0] = x[1]
@@ -26,15 +27,14 @@ def f(t, x):
     return res
 
 
-# res_ad, t_array = rk.calc_adaptive_step(init_data=init_data, function=f, t0=t0, t_last=100, init_step=0.1,
-#                                         tolerance=1e-2)
+res_ad, t_array = rk.calc_adaptive_step(init_data=init_data, function=f, t0=t0, t_last=100, init_step=0.1,
+                                        tolerance=1e-13)
 
-
-res_ad, t_array = rk.calc_fix_step(init_data=init_data, function=f, t0=t0, step=0.01, n_steps=10000)
+# res_ad, t_array = rk.calc_fix_step(init_data=init_data, function=f, t0=t0, step=0.1, n_steps=10000)
 
 true_solution = np.zeros(len(t_array))
 
-for i in range(len(true_solution)):
+for i in range(len(t_array)):
     true_solution[i] = solution(t_array[i])
 
 fig = plt.figure()

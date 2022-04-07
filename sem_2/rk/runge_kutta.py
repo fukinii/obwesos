@@ -11,13 +11,14 @@ class RungeKutta:
         self.max_iters = 100
 
     def calc_fix_step(self, init_data, function, t0, step, n_steps):
-        res = np.repeat(np.reshape(init_data, (1, init_data.shape[0])), n_steps, axis=0)
-        t_array = np.zeros(n_steps)
+        res = np.repeat(np.reshape(init_data, (1, init_data.shape[0])), n_steps + 1, axis=0)
+        t_array = np.zeros(n_steps + 1)
         t_array[0] = t0
-        for i in range(n_steps - 1):
+        for i in range(n_steps):
             t = t0 + step * i
             res[i + 1] = self.calc_single_fix_step(init_data=res[i], t0=t, function=function, step=step)
-            t_array[i + 1] = t
+            t_array[i] = t
+        t_array[len(t_array) - 1] = t0 + step * n_steps
         return res, t_array
 
     def calc_adaptive_step(self, init_data, function, t0, t_last, init_step, tolerance):
@@ -25,44 +26,57 @@ class RungeKutta:
         res = np.reshape(init_data, (1, init_data.shape[0]))
         t = t0
         step = init_step
+        prev_step = init_step
+        prev_t = t
         t_array = np.array([t])
         while t < t_last:
-            step, res_i = self.calc_single_adaptive_step(init_data=res[len(res) - 1], t0=t, function=function,
+
+            prev_step = step
+            t_array = np.append(t_array, prev_t + prev_step)
+            prev_t = prev_t + prev_step
+            step, res_i = self.calc_single_adaptive_step(init_data=res[-1], t0=t, function=function,
                                                          step=step, tolerance=tolerance)
             res_i = np.reshape(res_i, (1, res_i.shape[0]))
             res = np.append(res, res_i, axis=0)
+
             t = t + step
-            t_array = np.append(t_array, t)
+        # t_array = np.append(t_array, t)
         return res, t_array
 
     def calc_single_adaptive_step(self, init_data, t0, function, step, tolerance):
 
         next_data_one_step = init_data
         iter = 0
-        while iter < self.max_iters:
-            data_half_step = np.copy(next_data_one_step)
-            next_data_one_step = self.calc_single_fix_step(init_data=next_data_one_step, t0=t0, function=function,
-                                                           step=step)
+        # while iter < self.max_iters:
+        data_half_step = np.copy(next_data_one_step)
+        next_data_one_step = self.calc_single_fix_step(init_data=next_data_one_step, t0=t0, function=function,
+                                                       step=step)
 
-            data_half_step = self.calc_single_fix_step(init_data=data_half_step, t0=t0, function=function,
-                                                       step=step / 2)
-            data_half_step = self.calc_single_fix_step(init_data=data_half_step, t0=t0, function=function,
-                                                       step=step / 2)
+        data_half_step = self.calc_single_fix_step(init_data=data_half_step, t0=t0, function=function,
+                                                   step=step / 2)
+        data_half_step = self.calc_single_fix_step(init_data=data_half_step, t0=t0, function=function,
+                                                   step=step / 2)
 
-            factor = 1. / (pow(2, self.butcherTable.order) - 1)
-            errorVector = (next_data_one_step - data_half_step) * factor
-            # error = errorVector.norm() / next_data_one_step.norm()
-            error = np.linalg.norm(errorVector) / np.linalg.norm(next_data_one_step)
+        # factor = 1. / (pow(2, self.butcherTable.order) - 1)
+        factor = 1. / (1 - pow(2, - self.butcherTable.order))
+        errorVector = (data_half_step - next_data_one_step) * factor
+        # error = errorVector.norm() / next_data_one_step.norm()
+        error = np.linalg.norm(errorVector) / np.linalg.norm(next_data_one_step)
 
-            local_factor = pow(tolerance / error, 1. / self.butcherTable.order)
-            if local_factor >= 1.:
-                next_data_one_step += errorVector
-                step = step * local_factor
-                break
-            else:
-                step = step * local_factor
-                next_data_one_step = init_data
-            iter += 1
+        local_factor = pow(tolerance / error, 1. / self.butcherTable.order)
+        next_data_one_step += errorVector
+        step = step * local_factor
+
+        a = 1
+        # if local_factor >= 1.:
+        #     next_data_one_step += errorVector
+        #     step = step * local_factor
+        #     break
+        # else:
+        #     step = step * local_factor
+        #     next_data_one_step = init_data
+        # iter += 1
+
         return step, next_data_one_step
 
     def calc_single_fix_step(self, init_data, t0, function, step):
