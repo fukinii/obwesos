@@ -1,4 +1,4 @@
-eV_to_erg = 1.602176634e-19
+eV_to_erg = 1.602176634e-12
 
 Phi_sun = 3.83 * 1e33 / eV_to_erg
 T_v = 0.498
