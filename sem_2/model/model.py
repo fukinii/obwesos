@@ -71,8 +71,10 @@ class PhotoionizationModel:
 
     @staticmethod
     def calc_tau_0():
-        pass
-
-    @staticmethod
-    def calc_j_v(r, t):
         return 1.
+
+    def calc_j_v(self):
+        tau_0 = self.calc_tau_0()
+        res = self.calc_j_nu_0() * self.calc_J(tau_0=tau_0) / r_non_dim / r_non_dim
+
+        return res

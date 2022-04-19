@@ -17,6 +17,8 @@ M_H = 2.7e30
 M_sun = 2.e33
 L = 6454
 R_0 = L * a
+R_sun_non_dim = 7.23e-7
+r_non_dim = 0.05
 # a = 1e-5
 # T_e = T = 1e-3
 # n = 425.4
