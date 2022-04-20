@@ -63,6 +63,8 @@ class RungeKutta:
         # error = errorVector.norm() / next_data_one_step.norm()
         error = np.linalg.norm(errorVector) / np.linalg.norm(next_data_one_step)
 
+        print("error = ", error)
+
         local_factor = pow(tolerance / error, 1. / self.butcherTable.order)
         next_data_one_step += errorVector
         step = step * local_factor

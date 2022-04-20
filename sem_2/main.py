@@ -14,4 +14,4 @@ T_e_init = 1e-3
 
 model.initialize(alpha_init=alpha_init, T_e_init=T_e_init, T_init=T_init)
 
-model.solve(t0=0., time_max=1e9, init_step=1e0, tolerance=1e-8)
+model.solve(t0=0., time_max=1e9, init_step=1e2, tolerance=1e-12)
