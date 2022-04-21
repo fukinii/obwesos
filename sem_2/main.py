@@ -1,7 +1,8 @@
 import numpy as np
 from rk.runge_kutta import RungeKutta
 import matplotlib.pyplot as plt
-from model.model import PhotoionizationModel
+# from model.model import PhotoionizationModel
+from model.model2 import PhotoionizationModel
 from model.consts import *
 
 n = 425.4
