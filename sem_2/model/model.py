@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 from .consts import *
 from sem_2.integral.integral import integrate_from_points
@@ -45,7 +47,7 @@ class PhotoionizationModel:
             prev_t = prev_t + prev_step
 
             next_res = np.zeros((3, len(self.r_array)))
-
+            next_step_min = 1e20
             for r_index, r in enumerate(self.r_array):
                 alpha = self.solution[-1, r_index, 0]
                 T = self.solution[-1, r_index, 2]
@@ -54,11 +56,21 @@ class PhotoionizationModel:
                 def function(t, data):
                     return self.calc_rhs(alpha=data[0], T_e=data[1], T=data[2], tau_0=tau_0)
 
-                step, next_data = self.rk.calc_single_adaptive_step(init_data=np.array([alpha, T_e, T]),
-                                                                    t0=current_time, function=function, step=step,
-                                                                    tolerance=tolerance)
-                next_res[:, r_index] = next_data
+                next_step, next_data = self.rk.calc_single_adaptive_step(init_data=np.array([alpha, T_e, T]),
+                                                                         t0=current_time, function=function,
+                                                                         step=step,
+                                                                         tolerance=tolerance)
+                if next_step < next_step_min:
+                    next_step_min = next_step
 
+                print("================\n step = ", step,
+                      "\nr = ", r,
+                      "\nalpha = ", next_data[0],
+                      "\nT_e = ", next_data[1],
+                      "\nT = ", next_data[2])
+
+                next_res[:, r_index] = next_data
+            step = next_step_min
             next_res = next_res.T
             next_res_1 = np.reshape(next_res, (1, next_res.shape[0], next_res.shape[1]))
             self.solution = np.concatenate((self.solution, next_res_1), axis=0)
@@ -72,11 +84,15 @@ class PhotoionizationModel:
             # self.T_e_array = np.concatenate((self.T_e_array, next_res[2, :]), axis=0)
 
             # res = np.concatenate((res, next_res), axis=0)
-            print(current_time)
+            print(current_time / 1e9)
             current_time = current_time + step
         return self.solution
 
     def calc_rhs(self, alpha, T_e, T, tau_0):
+        # if T < 0:
+        #     T = np.abs(T)
+        # if T_e < 0:
+        #     T_e = np.abs(T_e)
         res = np.zeros(self.equationNumber)
         j_ei = self.calc_j_ei(T_e=T_e)
         j_nu_ei = self.calc_j_nu_ei(T_e=T_e)
@@ -91,6 +107,7 @@ class PhotoionizationModel:
                          1 - 2. * self.calc_F(T_e=T_e) / 3) * alpha * self.n * j_nu_ei + (2. * T_v / 3. - T_e) * (
                          1 - alpha) / alpha * j_v
         res[2] = - (T - T_e) * alpha * nu_e
+
         return res
 
     @staticmethod

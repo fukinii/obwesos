@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 from .butcher_table import ButcherTable4
 
@@ -30,7 +32,6 @@ class RungeKutta:
         prev_t = t
         t_array = np.array([t])
         while t < t_last:
-
             prev_step = step
             t_array = np.append(t_array, prev_t + prev_step)
             prev_t = prev_t + prev_step
@@ -63,7 +64,11 @@ class RungeKutta:
         # error = errorVector.norm() / next_data_one_step.norm()
         error = np.linalg.norm(errorVector) / np.linalg.norm(next_data_one_step)
 
-        print("error = ", error)
+        if error == 0.:
+            a = 1
+
+        if math.isnan(error):
+            a = 1
 
         local_factor = pow(tolerance / error, 1. / self.butcherTable.order)
         next_data_one_step += errorVector
@@ -78,6 +83,11 @@ class RungeKutta:
         #     step = step * local_factor
         #     next_data_one_step = init_data
         # iter += 1
+
+        # print("error = ", error, "\n step = ", step,
+        #       "\nalpha = ", next_data_one_step[0])
+        #       # "\nT_e = ", next_data_one_step[1],
+        #       # "\nT = ", next_data_one_step[2])
 
         return step, next_data_one_step
 
