@@ -64,11 +64,14 @@ class RungeKutta:
         # error = errorVector.norm() / next_data_one_step.norm()
         error = np.linalg.norm(errorVector) / np.linalg.norm(next_data_one_step)
 
-        if error == 0.:
-            a = 1
+        # if error == 0.:
+        # assert False, "error = 0."
+        # T = np.abs(T)
+        # a = 1
 
-        if math.isnan(error):
-            a = 1
+        # if math.isnan(error):
+        # assert False, "error = nan."
+        # a = 1
 
         local_factor = pow(tolerance / error, 1. / self.butcherTable.order)
         next_data_one_step += errorVector
@@ -102,6 +105,14 @@ class RungeKutta:
             for column_idx in range(row_idx):
                 tmp_data = tmp_data + kArray[column_idx] * self.butcherTable.matrix[row_idx, column_idx] * step
 
+            if tmp_data[0] - 1 > 0.:
+                tmp_data[0] = 1.
+            # if tmp_data[0] < 0.:
+            #     tmp_data[0] = 1e-10
+            # if tmp_data[1] < 0.:
+            #     tmp_data[1] = 1e-10
+            # if tmp_data[2] < 0.:
+            #     tmp_data[2] = 1e-10
             kArray[row_idx] = function(tmp_time, tmp_data)
         tmp_data = np.zeros_like(init_data)
         for idx, kArray_i in enumerate(kArray):
@@ -109,4 +120,10 @@ class RungeKutta:
 
         tmp_data *= step
         tmp_data += init_data
+        if tmp_data[0] - 1 > 1e-5:
+            tmp_data[0] = 1.
+        #     print("Альфа слишком большой: ", tmp_data[0])
+        #     assert False
+        # else:
+        #     tmp_data[0] = 1.
         return tmp_data
