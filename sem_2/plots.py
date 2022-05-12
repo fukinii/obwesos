@@ -1,7 +1,5 @@
 import sys
 
-# sys.path.extend(['/Users/u19800196/ilya/obwesos/sem_2'])
-sys.path.extend(['/home/fukin/obwesos/obwesos/sem_2'])
 import pickle
 
 import numpy as np
