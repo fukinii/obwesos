@@ -1,9 +1,14 @@
+import sys
+# sys.path.extend(['/home/fukin/obwesos/obwesos/sem_2'])
+sys.path.extend(['/home/fukin/obwesos/obwesos/sem_2'])
+import pickle
+
 import math
 
 import numpy as np
 from .consts import *
-from sem_2.integral.integral import integrate_from_points
-from sem_2.rk.runge_kutta import RungeKutta
+from integral.integral import integrate_from_points
+from rk.runge_kutta import RungeKutta
 from multiprocessing import Pool
 from functools import partial
 
@@ -16,23 +21,36 @@ class PhotoionizationModel:
         self.alpha_array = np.zeros((1, len(self.r_array)))
         self.T_array = np.zeros((1, len(self.r_array)))
         self.T_e_array = np.zeros((1, len(self.r_array)))
+        self.j_array = np.zeros((1, len(self.r_array)))
 
         self.solution = np.zeros((1, len(self.r_array), 3))
 
         self.rk = RungeKutta()
 
-    def initialize(self, alpha_init, T_e_init, T_init):
-        self.alpha_array[0, :] = alpha_init
-        self.T_array[0, :] = T_init
-        self.T_e_array[0, :] = T_e_init
+    def initialize(self, alpha_init, T_e_init, T_init, is_array=False):
+        if not is_array:
+            self.alpha_array[0, :] = alpha_init
+            self.T_array[0, :] = T_init
+            self.T_e_array[0, :] = T_e_init
 
-        self.solution[0, :, 0] = alpha_init
-        self.solution[0, :, 1] = T_e_init
-        self.solution[0, :, 2] = T_init
+            self.solution[0, :, 0] = alpha_init
+            self.solution[0, :, 1] = T_e_init
+            self.solution[0, :, 2] = T_init
+
+        else:
+            self.alpha_array[0] = alpha_init
+            self.T_array[0] = T_init
+            self.T_e_array[0] = T_e_init
+
+            self.solution[0, :, 0] = alpha_init
+            self.solution[0, :, 1] = T_e_init
+            self.solution[0, :, 2] = T_init
+
+
 
         a = 1
 
-    def solve(self, t0, time_max, init_step, tolerance=1e-8):
+    def solve(self, t0, time_max, init_step, tolerance=1e-8, dump_file=False):
 
         current_time = t0
         step = init_step
@@ -41,37 +59,55 @@ class PhotoionizationModel:
 
         res = np.zeros((1, 3, len(self.r_array)))
 
-        increased_tol_3_times = False
-
+        increased_tol_1_times = False
+        increased_tol_2_times = False
+        iteration_number = 0
+        # pool = Pool(12)
         while current_time < time_max:
             prev_step = step
             t_array = np.append(t_array, prev_t + prev_step)
             prev_t = prev_t + prev_step
 
             next_res = np.zeros((3, len(self.r_array)))
+            next_j = np.zeros((1, len(self.r_array)))
             next_step_min = 1e20
 
-            with Pool(processes=12) as pool:
-                func = partial(self.parall_func, current_time, step, tolerance)
-                next_ste_array, next_step_data = pool.map(func, np.arange(len(self.r_array)))
-
-            a = 1
-
+            # # with Pool(processes=12) as pool:
+            # func = partial(self.parall_func, current_time, step, tolerance)
+            # # next_ste_array, next_step_data = pool.map(func, np.arange(len(self.r_array)))
+            # data = pool.map(func, np.arange(len(self.r_array)))
+            #
+            # # for data_i in data:
             # for r_index, r in enumerate(self.r_array):
-            # tau_0 = self.calc_tau_0(r_index)
-            # alpha = self.solution[-1, r_index, 0]
-            # T = self.solution[-1, r_index, 2]
-            # T_e = self.solution[-1, r_index, 1]
+            #     next_step = data[r_index][0]
+            #     if next_step < next_step_min:
+            #         next_step_min = next_step
             #
-            # def function(t, data):
-            #     return self.calc_rhs(alpha=data[0], T_e=data[1], T=data[2], tau_0=tau_0, r_index=r_index)
+            #     tau_0 = self.calc_tau_0(r_index)
+            #     next_j[0, r_index] = self.calc_j_v(tau_0, r_index)
+            #     next_res[:, r_index] = data[r_index][1]
             #
-            # next_step, next_data = self.rk.calc_single_adaptive_step(init_data=np.array([alpha, T_e, T]),
-            #                                                          t0=current_time, function=function,
-            #                                                          step=step,
-            #                                                          tolerance=tolerance)
-            # if next_step < next_step_min:
-            #     next_step_min = next_step
+            # # next_step_min = np.min(data[0])
+            #
+            #
+            #
+            # a = 1
+
+            for r_index, r in enumerate(self.r_array):
+                tau_0 = self.calc_tau_0(r_index)
+                alpha = self.solution[-1, r_index, 0]
+                T_e = self.solution[-1, r_index, 1]
+                T = self.solution[-1, r_index, 2]
+
+                def function(t, data):
+                    return self.calc_rhs(alpha=data[0], T_e=data[1], T=data[2], tau_0=tau_0, r_index=r_index)
+
+                next_step, next_data = self.rk.calc_single_adaptive_step(init_data=np.array([alpha, T_e, T]),
+                                                                        t0=current_time, function=function,
+                                                                        step=step,
+                                                                        tolerance=tolerance)
+                if next_step < next_step_min:
+                    next_step_min = next_step
             # if r == 0.05:
             # if next_data[0] - 1 > 0:
             # if next_data[0] - 1 > 1e-5:
@@ -81,17 +117,23 @@ class PhotoionizationModel:
             # next_data[0] = 1.
             # if r_index == 0:
 
-            # print("===============\nr = ", r,
-            #       "\nalpha = ", next_data[0],
-            #       "\nT_e = ", next_data[1])
-            # "\nT = ", next_data[2])
 
-            # next_res[:, r_index] = next_data
+                    # "\nT = ", next_data[2])
+                next_j[0, r_index] = self.calc_j_v(tau_0, r_index)
+                next_res[:, r_index] = next_data
+                # print("===============\nr = ", r,
+                #     "\nalpha = ", next_data[0],
+                #     "\nT_e = ", next_data[1],
+                #     "\nj = ", next_j[0][r_index])
+            ###################################################
             step = next_step_min
             next_res = next_res.T
             next_res_1 = np.reshape(next_res, (1, next_res.shape[0], next_res.shape[1]))
+            self.j_array = np.concatenate((self.j_array, next_j), axis=0)
+
             self.solution = np.concatenate((self.solution, next_res_1), axis=0)
 
+            # print(self.j_array)
             a = 1
             # next_alpha = next_res[0, :]
             # next_alpha_reshape = np.reshape(next_alpha, (1, len(next_alpha)))
@@ -101,23 +143,42 @@ class PhotoionizationModel:
             # self.T_e_array = np.concatenate((self.T_e_array, next_res[2, :]), axis=0)
 
             # res = np.concatenate((res, next_res), axis=0)
-            print("++++++++++++++++++++++++++++++++++++++\n")
-            print("step = ", step,
-                  "\nt = ", current_time, )
-            print("\n++++++++++++++++++++++++++++++++++++++\n")
+
+            if iteration_number % 100 == 0:
+                print("++++++++++++++++++++++++++++++++++++++\n")
+                print("step = ", step,
+                    "\nt = ", current_time, f'\n iter: {iteration_number}')
+                print("\n++++++++++++++++++++++++++++++++++++++\n")
 
             # print(step)
 
             current_time = current_time + step
 
-            if current_time > 20 and not increased_tol_3_times:
-                tolerance = tolerance * 1e4
-                increased_tol_3_times = True
+            # if current_time > 100 and not increased_tol_1_times:
+            #     print("\n!!!!!!!!!!!!!!!Уменьшил точность!!!!!!!!!!!!!!!!!!!!!\т")
+            #     tolerance = tolerance * 1e3
+            #     # tolerance = tolerance * 2.3e4
+            #     increased_tol_1_times = True
+
+            # if current_time > 1e6 and not increased_tol_2_times:
+            #     tolerance = tolerance * 2
+            #     increased_tol_2_times = True
+
+            iteration_number += 1
+            if dump_file:
+                if iteration_number % 1000 == 0:
+                    data_to_dump = [self.solution, t_array, self.j_array, current_time, step, iteration_number]
+                    with open('output__.pickle', 'wb') as f:
+                        pickle.dump(data_to_dump, f)
+                    print(f'iter: {iteration_number}, cur_time: {current_time} pickle saved')
+                    del data_to_dump
+
         return self.solution
 
     def calc_rhs(self, alpha, T_e, T, tau_0, r_index):
+        # print(T_e)
         if alpha > 1:
-            assert False, "alpha < 1"
+            assert False, "alpha > 1"
         if alpha < 0:
             assert False, "alpha < 0"
             # T = np.abs(T)
@@ -163,8 +224,8 @@ class PhotoionizationModel:
 
     @staticmethod
     def calc_K(T_e):
-        a = pow(T_e, 3. / 2.)
-        b = np.exp(-I / T_e)
+        # a = pow(T_e, 3. / 2.)
+        # b = np.exp(-I / T_e)
         res = 3e21 * pow(T_e, 3. / 2.) * np.exp(-I / T_e)
         return res
 
@@ -193,7 +254,9 @@ class PhotoionizationModel:
         return res
 
     def calc_tau_0(self, r_index):
-        tau_0 = integrate_from_points(1 - self.alpha_array[-1, :r_index + 1], self.r_array[:r_index + 1])
+        alpha = self.solution[-1, :r_index + 1, 0]
+        # tau_0 = integrate_from_points(1 - self.alpha_array[-1, :r_index + 1], self.r_array[:r_index + 1])
+        tau_0 = integrate_from_points(1 - alpha, self.r_array[:r_index + 1])
         tau_00 = R_0 * self.n * sigma_0_v
 
         return tau_0 * tau_00

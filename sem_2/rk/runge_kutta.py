@@ -65,7 +65,7 @@ class RungeKutta:
         error = np.linalg.norm(errorVector) / np.linalg.norm(next_data_one_step)
 
         # if error == 0.:
-        # assert False, "error = 0."
+        #     assert False, "error = 0."
         # T = np.abs(T)
         # a = 1
 
@@ -107,6 +107,7 @@ class RungeKutta:
 
             if tmp_data[0] - 1 > 0.:
                 tmp_data[0] = 1.
+
             # if tmp_data[0] < 0.:
             #     tmp_data[0] = 1e-10
             # if tmp_data[1] < 0.:
