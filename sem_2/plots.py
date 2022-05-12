@@ -34,6 +34,7 @@ iteration_number = int(data[5])
 a = 1
 
 fig = plt.figure(figsize=(14, 10))
+
 plot_ax_1 = fig.add_subplot(2, 2, 1)
 plot_ax_2 = fig.add_subplot(2, 2, 2)
 plot_ax_3 = fig.add_subplot(2, 2, 3)
@@ -55,9 +56,14 @@ j_array_sparced = []
 
 result_t = []
 print(t_array.shape)
-for t_i, t in enumerate(t_array[:10000]):
-    if t_i % 10 == 0:
+for t_i, t in enumerate(t_array[:100000]):
+
+    if t_i < 400:
         result_t.append([t_i, t])
+    elif t_i % 100 == 0:
+        result_t.append([t_i, t])
+    # if
+
 
 for r_i in range(len(r_array)):
     alpha_i = []
@@ -93,10 +99,9 @@ for i in range(len(result_t)):
                    # label=f'r: {t}%.2f',
                    color=colors[i].hex)
     # plot_ax_1.plot(t_linspace_sparced, alpha_sparced[:, r_i], label=f'r: {r_array[r_i]}%.2f')
-# plot_ax_1.set_title('alpha(t)', fontsize=15)
-# plot_ax_1.set_xlabel(r'$log10(t)$', loc='right')
-# plot_ax_1.set_ylabel(r'$log10(alpha)$')
-# plot_ax_1.legend()
+plot_ax_1.set_title('alpha(r)', fontsize=15)
+plot_ax_1.set_xlabel(r'$r$', loc='right')
+plot_ax_1.set_ylabel(r'$log10(alpha)$')
 plot_ax_1.grid()
 
 for i in range(len(result_t)):
@@ -104,9 +109,9 @@ for i in range(len(result_t)):
                    T_e_sparced[:, i],
                    # label=f'r: {t}%.2f',
                    color=colors[i].hex)
-# plot_ax_2.set_title('T(t)', fontsize=15)
-# plot_ax_2.set_xlabel(r'$log10(t)$', loc='right')
-# plot_ax_2.set_ylabel(r'$log10(T)$')
+plot_ax_2.set_title('T(r)', fontsize=15)
+plot_ax_2.set_xlabel(r'$r$', loc='right')
+plot_ax_2.set_ylabel(r'$log10(T)$')
 plot_ax_2.grid()
 
 for i in range(len(result_t)):
@@ -114,10 +119,9 @@ for i in range(len(result_t)):
                    T_sparced[:, i],
                    # label=f'r: {t}%.2f',
                    color=colors[i].hex)
-# plot_ax_3.legend()
-# plot_ax_3.set_title('T_e(t)', fontsize=15)
-# plot_ax_3.set_xlabel(r'$log10(t)$', loc='right')
-# plot_ax_3.set_ylabel(r'$log10(T_e)$')
+plot_ax_3.set_title('T_e(r)', fontsize=15)
+plot_ax_3.set_xlabel(r'$r$', loc='right')
+plot_ax_3.set_ylabel(r'$log10(T_e)$')
 plot_ax_3.grid()
 
 for i in range(len(result_t)):
@@ -125,13 +129,13 @@ for i in range(len(result_t)):
                    j_array_sparced[:, i],
                    # label=f'r: {t}%.2f',
                    color=colors[i].hex)
-# plot_ax_4.legend()
-# plot_ax_4.set_title('j_v(t)', fontsize=15)
-# plot_ax_4.set_xlabel(r'$log10(t)$', loc='right')
-# plot_ax_4.set_ylabel(r'$log10(j_v)$')
+plot_ax_4.set_title('j_v(r)', fontsize=15)
+plot_ax_4.set_xlabel(r'$r$', loc='right')
+plot_ax_4.set_ylabel(r'$log10(j_v)$')
 plot_ax_4.grid()
 
-# plt.savefig('Графики_result_r.png')
+fig.suptitle('Зависимость переменных от расстояния для разных моментов времени от 0 до ' + str(round(result_t[-1][1])))
+plt.savefig('graph_result_f(r).png')
 plt.show()
 
 # solution = data[0]
